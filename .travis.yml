@@ -1,34 +1,36 @@
-os: linux
-dist: trusty
-sudo: false
-compiler: gcc
 language: cpp
+os: linux
+dist: bionic
+name: "Ubuntu Bionic 18.04 LTS"
+compiler: gcc
 
 env:
   global:
-    - SCONSFLAGS="-j2"
+    - MAKEFLAGS="-j2"
     - ANALYZER="."
     - LD_LIBRARY_PATH=$ANALYZER:$LD_LIBRARY_PATH
    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
    #   via the "travis encrypt" command using the project repo's public key
-    - secure: "CYBDBKDsPAV05SA9C8zkkjcbXXQ2lrzKFQfJTclwM0dfVTG5KkEnE/eBEKZshsq+S/FORxkaDs/3bpntvkmrfR7ftx9/5aEbpRFqBfSzUlfOKDYsw+ZxcnIOtR8Jcnk/JEn5Ln+B5CjscS4nypuU9WbJyI1TusWBDpPMK/Yn6sAF9NenqdD+FqeLHRQzc7Xwy9IBEtjWACdci4SbXnpdfQA9l1wDmOspIiJk4tIdOJFDIhwDzARX+1d2usC4Wa8gce5a/FVeP2S/UWAWlcgWMiFOhidryPgVV3Mc3A+cEebjiMYHhcpALiUed+rb2d7Ek01P6w+01irIKMqoPbbt9Wq9RbGm7Rbq2owhR//j3BbWqrgPBYHcgXmWojastP7B4txFLp3BLuTP36+hderOLBRuEuz6m26tnmRb/IyB5DpYi0jBYIgy4Uz4J+QXHvR5Pd1f2CgSRDxZAcdb1KZ9ooQ3IR/hsVasNOconDw8ipwfY5SNmtEOT+TfYvkXQ/Si7oNaaDvwpKMNTJOux8b9g+TN9CxBpEnNy7I3GzvjNJrgmtDAFgUpIeJ5o6uPiaeRq3QJTCeqDAUVtoaL9PxVGqyKOZJVPucqeARb8BvkyaPw8TO9HDecfVql59CxvsApyxjDMRZKjd0EAhoT0+21vuRQF/cD0WLp1LgnOLzLbRg="
+    - secure: "K7kYIU7B8o9IKbywgHE9ah0v/WfjORbw2aXTET+/Ih+waEycUK9u40scDCSRQWa/+EHsIo4udsNLdP2eRb+yJUutkAfccVTliGyKuNtXSedNRS4s7gEQyvU2nGnqJx+wDGadYnnLkXVsEgK2nktv1yAxDT1dU6pPON6Ea74Shxwa69m9eQTi3kn7Qhd0fdNJFPvA9mQlDKUsuAYFL7V8sTgP0qI8XupXlJKVUgwv0ISiSnOjUHaCCXPEOlvE6KbHUIhk4i43RD49Tsg/BKyKGUZY6UqpQvy4zBf6KW0tQGZxfBo+llEHUIVcdqPFh5/L7xQyaEjb/kNP/LmLOCzXFMDd7h68NoYrkhwVIhwbjC8gGCo4AYOt5Cn005B68iaijA5vMSFnS5gRdE0wRn3ez6bof05La5CKAsJCAaeCKoWGPhigcvJdvDJQrkcp42YX4btCwJVwzn7GLpQzjq7brn4VGS/yCOrjhBxz6tohtXLv4bARReM1MmVF9ZO4KuIAurkQNQK26C1YEYiv5cvErL/cAfiIOkJYlinzIxqfXI82xJbxTVy6PDYgT/4qX2C5710oLP7MCRh1/mteKBzsAbb5YhsNqdUGA7Y/MjLm+DeWhbYbGcNBEpT3RHNclnb2+mLTrUqJSdtTTsW7Z5X1buryfRlVhb4OUjaZrDt8920="
 
+before_install:
+  - sudo apt-get update;
+  - sudo apt-get install -y libtbb2 patchelf;
 install:
-  - wget https://root.cern.ch/download/root_v6.12.06.Linux-ubuntu14-x86_64-gcc4.8.tar.gz -O /tmp/root.tar.gz
+  - wget https://root.cern/download/root_v6.18.04.Linux-ubuntu18-x86_64-gcc7.4.tar.gz -O /tmp/root.tar.gz;
   - tar -xzf /tmp/root.tar.gz
   - source ./root/bin/thisroot.sh
-  - python --version
-  - scons --version
+  - root-config --version
+  - cmake --version
 script:
   - if [[ "${COVERITY_SCAN_BRANCH}" == 1 ]]; then
       echo "Don't build on coverty_scan branch.";
       exit 0;
     fi
-  - scons
+  - mkdir build && cd build && cmake .. && make && cd ..
 after_success:
-  - ldd $ANALYZER/apps/analyzer
-  - $ANALYZER/apps/analyzer --version
-  - $ANALYZER/apps/analyzer -q
+  - $ANALYZER/build/apps/analyzer --version
+  - $ANALYZER/build/apps/analyzer -q
 branches:
   only:
     - master
