@@ -9,37 +9,9 @@ env:
     - MAKEFLAGS="-j2"
     - ANALYZER="."
     - LD_LIBRARY_PATH=$ANALYZER:$LD_LIBRARY_PATH
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   #   via the "travis encrypt" command using the project repo's public key
-    - secure: "K7kYIU7B8o9IKbywgHE9ah0v/WfjORbw2aXTET+/Ih+waEycUK9u40scDCSRQWa/+EHsIo4udsNLdP2eRb+yJUutkAfccVTliGyKuNtXSedNRS4s7gEQyvU2nGnqJx+wDGadYnnLkXVsEgK2nktv1yAxDT1dU6pPON6Ea74Shxwa69m9eQTi3kn7Qhd0fdNJFPvA9mQlDKUsuAYFL7V8sTgP0qI8XupXlJKVUgwv0ISiSnOjUHaCCXPEOlvE6KbHUIhk4i43RD49Tsg/BKyKGUZY6UqpQvy4zBf6KW0tQGZxfBo+llEHUIVcdqPFh5/L7xQyaEjb/kNP/LmLOCzXFMDd7h68NoYrkhwVIhwbjC8gGCo4AYOt5Cn005B68iaijA5vMSFnS5gRdE0wRn3ez6bof05La5CKAsJCAaeCKoWGPhigcvJdvDJQrkcp42YX4btCwJVwzn7GLpQzjq7brn4VGS/yCOrjhBxz6tohtXLv4bARReM1MmVF9ZO4KuIAurkQNQK26C1YEYiv5cvErL/cAfiIOkJYlinzIxqfXI82xJbxTVy6PDYgT/4qX2C5710oLP7MCRh1/mteKBzsAbb5YhsNqdUGA7Y/MjLm+DeWhbYbGcNBEpT3RHNclnb2+mLTrUqJSdtTTsW7Z5X1buryfRlVhb4OUjaZrDt8920="
-
-before_install:
-  - sudo apt-get update;
-  - sudo apt-get install -y libtbb2 patchelf;
-install:
-  - wget https://root.cern/download/root_v6.18.04.Linux-ubuntu18-x86_64-gcc7.4.tar.gz -O /tmp/root.tar.gz;
-  - tar -xzf /tmp/root.tar.gz
-  - source ./root/bin/thisroot.sh
-  - root-config --version
-  - cmake --version
-script:
-  - if [[ "${COVERITY_SCAN_BRANCH}" == 1 ]]; then
-      echo "Don't build on coverty_scan branch.";
-      exit 0;
-    fi
-  - mkdir build && cd build && cmake .. && make && cd ..
-after_success:
-  - $ANALYZER/build/apps/analyzer --version
-  - $ANALYZER/build/apps/analyzer -q
-branches:
-  only:
-    - master
-    - coverity_scan
-notifications:
-  email:
-    recipients: ole@jlab.org
-    on_success: always
-    on_failure: always
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+    #   via the "travis encrypt" command using the project repo's public key
+    - secure: "WgTvIqfhAOb/a4nfWvdeEmEDq14BXb7xeZNalsJtDI0RXEOGZ8Qm3NCZCKK4Cp3GwQ4294CyqaeOXQuJZmrC8Pgm1pP7CCLJXmiih42imHrZH59IsqMUkP7PwzkD6hCgqvpP4QOH97LANiKauj3barGNdp8sKsTuHcMmTeY9MEK+tStU61zVYPYyXm9lXQee0YppJkX9DBL6J5LgElAxXOgE3FVt7mRhN45zUr/jxTQ2wtuDuHyo2JWh34gSmG02lgfDD0lH+hUUv1GKOLmtqn0p+MEZXmAb7k8fTsmJ2/c7oIFsVck+D5ttTbeBL0wi2nwUic8yoydMtYU/67PgRsP5L/s+LEDTs5vj7xxUyJ7so1hN3o/XKHT4bHBY4atEWFHYL0nTibxRYMHfpfjVn84SjsFlN0x/seBDRgvVV2+Knbn8zXMzR9psuYGF98PuYcgLh/+I7cNfSI4iO7SN5QmzxCwsyySrylu/6VOOyvfO6pbE9ZQ8WdoTZNasau86168AFlaGxnmnixUqKiWVGmzIBd1rNz9ZvL6cXXukTtuqlqiFGSkAukyUGSr7d4/lRCYdqy0QB7AVQ83FOZBcKPPs0Q4zea9ksFXpbyh6d68cY7jrU/AGeTHaMUUNx+WtiY1rkToAcVfkCUs5czUhFB6815fTxZWQm7X+dN48xbg="
 
 addons:
   coverity_scan:
@@ -47,5 +19,40 @@ addons:
       name: "JeffersonLab/analyzer"
       description: "Hall A Data Analysis Framework"
     notification_email: ole@jlab.org
-    build_command: scons
+    build_command_prepend: mkdir build && cd build && cmake ..
+    build_command: make
     branch_pattern: coverity_scan
+
+before_install:
+  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-coverity.crt
+  - sudo apt-get update;
+  - sudo apt-get install -y libtbb2 patchelf;
+
+install:
+  - wget https://root.cern/download/root_v6.18.04.Linux-ubuntu18-x86_64-gcc7.4.tar.gz -O /tmp/root.tar.gz;
+  - tar -xzf /tmp/root.tar.gz
+  - source ./root/bin/thisroot.sh
+  - root-config --version
+  - cmake --version
+
+script:
+  - if [[ "${COVERITY_SCAN_BRANCH}" == 1 ]]; then
+      echo "Don't build on coverty_scan branch.";
+      exit 0;
+    fi
+  - mkdir build && cd build && cmake .. && make && cd ..
+
+after_success:
+  - $ANALYZER/build/apps/analyzer --version
+  - $ANALYZER/build/apps/analyzer -q
+
+branches:
+  only:
+    - master
+    - coverity_scan
+
+notifications:
+  email:
+    recipients: ole@jlab.org
+    on_success: always
+    on_failure: always
