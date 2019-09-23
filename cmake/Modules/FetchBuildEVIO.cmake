@@ -2,11 +2,11 @@
 
 message(STATUS "Will build local copy of EVIO")
 
-set(EVIO_VERSION 4.4.6)
+set(EVIO_VERSION 5.2)
 set(repo hallac_evio)
-set(release evio-${EVIO_VERSION})
+set(release hallac-evio-${EVIO_VERSION})
 set(tarfile ${release}.tar.gz)
-set(EVIO_HASH 926a3314889a90afeb41725c6a2055f9)
+set(EVIO_HASH cc16b9f0d3a7d09e8928ea0fc1119047)
 
 set(EVIO_SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/evio/src)
 set(EVIO_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/evio/build)
@@ -29,7 +29,10 @@ unset(_errval)
 
 # This command is system dependent. It requires GNU tar or macOS BSD tar in PATH.
 # cmake -E tar does not support --strip-components and extracting a filename glob.
-execute_process(COMMAND tar -x --strip-components=3 -f ${EVIO_TARFILE} "*/libsrc"
+if(UNIX AND NOT APPLE)
+  set(TAR_WILDCARDS_FLAG "--wildcards")
+endif()
+execute_process(COMMAND tar -x --strip-components=3 -f ${EVIO_TARFILE} ${TAR_WILDCARDS_FLAG} "*/libsrc"
   WORKING_DIRECTORY ${EVIO_SOURCE_DIR})
 configure_file(evio/CMakeLists.txt.in ${EVIO_SOURCE_DIR}/CMakeLists.txt @ONLY)
 file(COPY evio/EVIOConfig.cmake.in DESTINATION ${EVIO_SOURCE_DIR})
